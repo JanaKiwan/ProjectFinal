@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
-from catboost import CatBoostClassifier, Pool
 
 # =========================
 # Load Models, Metrics, and Data
@@ -11,12 +10,7 @@ from catboost import CatBoostClassifier, Pool
 @st.cache_resource
 def load_model(file_path):
     """Loads the saved model."""
-    if file_path.endswith('.cbm'):
-        model = CatBoostClassifier()
-        model.load_model(file_path, format="cbm")
-    else:
-        model = joblib.load(file_path)
-    return model
+    return joblib.load(file_path)
 
 @st.cache
 def load_metrics(file_path):
@@ -32,13 +26,9 @@ def load_data(file_path):
 # Prediction Function
 # =========================
 
-def make_prediction(model, features, is_catboost=False, categorical_columns=None):
+def make_prediction(model, features):
     """Generates the prediction and probability."""
-    if is_catboost:
-        pool = Pool(features, cat_features=categorical_columns)
-        proba = model.predict_proba(pool)[:, 1]
-    else:
-        proba = model.predict_proba(features)[:, 1]
+    proba = model.predict_proba(features)[:, 1]
     prediction = proba >= 0.5
     return prediction, proba
 
@@ -63,27 +53,18 @@ model_options = {
     "Lasso Logistic Regression": {
         "model_path": "best_logistic_pipeline.pkl",
         "metrics_path": "logistic_pipeline_results.npy",
-        "is_catboost": False
     },
     "Logistic Regression (L2)": {
         "model_path": "best_lr_model.pkl",
         "metrics_path": "lr_model_results.npy",
-        "is_catboost": False
     },
     "Calibrated SVC": {
         "model_path": "best_svc_pipeline.pkl",
         "metrics_path": "svc_pipeline_results.npy",
-        "is_catboost": False
     },
     "Decision Tree": {
         "model_path": "best_decision_tree_pipeline.pkl",
         "metrics_path": "decision_tree_pipeline_results.npy",
-        "is_catboost": False
-    },
-    "CatBoost": {
-        "model_path": "best_catboost_model.cbm",
-        "metrics_path": "catboost_model_results.npy",
-        "is_catboost": True
     }
 }
 
@@ -108,13 +89,11 @@ customer_row = customer_data[customer_data["CUSTOMERNAME"] == customer_id]
 
 # Drop columns not needed for prediction
 drop_columns = ["CUSTOMERNAME", "Purchase Probability"]
-categorical_columns = ["Most Frequent Item_Group", "Most Frequent Trend_Classification", "Customer_Lifetime_Category"]
 features = customer_row.drop(columns=drop_columns, errors="ignore")
 
 # Prediction
 if st.button("Predict"):
-    is_catboost = selected_model_details["is_catboost"]
-    prediction, proba = make_prediction(model, features, is_catboost, categorical_columns)
+    prediction, proba = make_prediction(model, features)
     prediction_result = "Yes" if prediction[0] else "No"
     st.write(f"**Prediction Outcome:** {prediction_result}")
     st.write(f"**Likelihood of Purchase:** {proba[0] * 100:.2f}%")
