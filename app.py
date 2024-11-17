@@ -77,10 +77,9 @@ metrics = load_metrics(selected_model_details["metrics_path"])
 
 # Display Model Metrics
 st.sidebar.header("Model Metrics")
-st.sidebar.write(f"**Best Threshold:** {metrics['best_threshold']:.2f}")
-st.sidebar.write(f"**Precision-Recall AUC (Validation):** {metrics['pr_auc_val']:.2f}")
-st.sidebar.write(f"**Precision-Recall AUC (Test):** {metrics['pr_auc_test']:.2f}")
-st.sidebar.write(f"**ROC AUC (Test):** {metrics['roc_auc_test']:.2f}")
+st.sidebar.write(f"**Best Threshold:** {metrics.get('best_threshold', 'N/A')}")
+st.sidebar.write(f"**Precision-Recall AUC (Test):** {metrics.get('pr_auc_test', 'N/A')}")
+st.sidebar.write(f"**ROC AUC (Test):** {metrics.get('roc_auc_test', 'N/A')}")
 
 # Select Customer
 st.header("Predict Customer Purchase Likelihood")
